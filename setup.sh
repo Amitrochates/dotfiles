@@ -23,3 +23,4 @@ link() {
 link "zsh/.zshrc" ".zshrc"
 link "zsh/.zsh" ".zsh"
 link "zsh/.p10k.zsh" ".p10k.zsh"
+link "nvim" ".config/nvim"
