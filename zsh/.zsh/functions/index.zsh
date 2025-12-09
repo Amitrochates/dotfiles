@@ -86,6 +86,36 @@ git() {
     return
   fi
 
+  ########################################
+  #               git log                #
+  ########################################
+  if [ "$1" = "log" ]; then
+    shift
+
+    # If args provided → normal show
+    if [ $# -gt 0 ]; then
+      command git log "$@"
+      return
+    fi
+
+    # No args → fzf commit selector
+    local commit
+    commit=$(
+      git log --oneline --decorate --color=always |
+      fzf --ansi \
+          --preview "git show --color=always {1} | bat --color=always --paging=never -l diff" \
+          --preview-window=right:70% \
+          --delimiter=' ' \
+          --with-nth=1.. \
+          --nth=1
+    ) || return
+
+    # Extract the commit hash (first token, strip color)
+    commit=$(echo "$commit" | sed 's/\x1b\[[0-9;]*m//g' | awk '{print $1}')
+
+    command git show "$commit"
+    return
+  fi
 
 
   ########################################
