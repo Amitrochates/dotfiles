@@ -54,7 +54,11 @@ export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 if [ -f "$HOME/.zsh/functions/index.zsh" ]; then
   source "$HOME/.zsh/functions/index.zsh"
 fi
-
+#Load fzf-git tooling
+export KEYTIMEOUT=1000
+if [ -f "$HOME/dotfiles/zsh/fzf-git.zsh" ]; then
+  source "$HOME/dotfiles/zsh/fzf-git.zsh"
+fi
 # ---------------------------------------------------------------
 # Powerlevel10k configuration (optional)
 # If your .p10k.zsh exists, load it

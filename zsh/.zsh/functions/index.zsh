@@ -1,4 +1,39 @@
 docker() {
+  local expanded_mode=0
+  local args=()
+  local has_format=0
+  local format_value=""
+  
+  # Check for -x or --expanded flag and existing --format
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -x|--expanded)
+        expanded_mode=1
+        shift
+        ;;
+      --format=*)
+        has_format=1
+        format_value="${1#--format=}"
+        shift
+        ;;
+      --format)
+        has_format=1
+        shift
+        if [ $# -gt 0 ] && [[ "$1" != -* ]]; then
+          format_value="$1"
+          shift
+        fi
+        ;;
+      *)
+        args+=("$1")
+        shift
+        ;;
+    esac
+  done
+  
+  # Restore positional parameters
+  set -- "${args[@]}"
+  
   if [ "$1" = "kill" ]; then
     shift
     # If a container ID/name is passed, behave normally
@@ -6,16 +41,54 @@ docker() {
       command docker kill "$@"
       return
     fi
-
     # Otherwise, open fzf selector
     local line cid
     line=$(docker ps --format '{{.ID}} {{.Names}}' \
       | fzf --preview 'docker logs $(echo {} | awk "{print \$1}")') || return
-
     cid=$(echo "$line" | awk '{print $1}')
     command docker kill "$cid"
   else
-    command docker "$@"
+    # Handle expanded mode
+    if [ $expanded_mode -eq 1 ]; then
+      case "$1" in
+        ps|images|volume|network)
+          if [ $has_format -eq 1 ]; then
+            # Extract field names from format like {{.Names}} {{.Mounts}}
+            local fields=()
+            # Match all {{.FieldName}} patterns
+            while [[ "$format_value" =~ \{\{\.([A-Za-z0-9_]+)\}\} ]]; do
+              fields+=(".${BASH_REMATCH[1]}")
+              format_value="${format_value#*${BASH_REMATCH[0]}}"
+            done
+            
+            if [ ${#fields[@]} -eq 0 ]; then
+              # No fields found, just use regular format
+              command docker "$@" --format "$format_value"
+            elif [ ${#fields[@]} -eq 1 ]; then
+              # Single field: use jq -r .FieldName
+              command docker "$@" --format '{{ json . }}' | jq -r "${fields[1]}"
+            else
+              # Multiple fields: use jq -r [.Field1, .Field2]
+              local jq_filter="[$(IFS=,; echo "${fields[*]}")]"
+              command docker "$@" --format '{{ json . }}' | jq -r "$jq_filter"
+            fi
+          else
+            # No --format flag, use full JSON with colorized output
+            command docker "$@" --format '{{ json . }}' | jq -C
+          fi
+          ;;
+        inspect)
+          command docker "$@" | jq -C
+          ;;
+        *)
+          # Silently fall back to normal execution for unsupported commands
+          command docker "$@"
+          ;;
+      esac
+    else
+      # Normal execution: no -x flag
+      command docker "$@"
+    fi
   fi
 }
 git() {
