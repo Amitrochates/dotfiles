@@ -133,6 +133,7 @@ git() {
       --multi \
       --prompt="Git Add > " \
       --header="Tab: multi-select | .: toggle stage/unstage | Enter: finish" \
+      --preview-window=right:60% \
       --bind='start:reload(
         {
           command git ls-files --others --exclude-standard | sed "s/^/[N] /" | GREP_COLORS="ms=01;31" grep --color=always ".*";
@@ -168,7 +169,9 @@ git() {
         else
           command git diff --color=always "$f" | bat --color=always --paging=never -l diff 2>/dev/null || echo "Modified: $f"
         fi
-      '
+      ' \
+      --scrollbar="▌▄" \
+      --scroll-off=1
     
     return
   fi 
