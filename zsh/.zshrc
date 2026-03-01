@@ -59,5 +59,9 @@ fi
 # Powerlevel10k configuration (optional)
 # If your .p10k.zsh exists, load it
 # ---------------------------------------------------------------
-[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+if [[ -n "$CURSOR_AGENT" ]]; then
+  # Skip theme initialization for better compatibility
+else
+  [[ -r ~/.p10k.zsh ]] && source ~/.p10k.zsh
+fi
 
