@@ -180,4 +180,9 @@ git() {
   ########################################
   command git "$@"
 }
-
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --icons'
+  alias ll='eza -lah --icons --git'
+  alias la='eza -a --icons'
+  alias lt='eza --tree --level=2 --icons'
+fi
