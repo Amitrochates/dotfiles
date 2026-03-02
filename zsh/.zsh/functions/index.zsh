@@ -186,3 +186,6 @@ if command -v eza >/dev/null 2>&1; then
   alias la='eza -a --icons'
   alias lt='eza --tree --level=2 --icons'
 fi
+
+export EDITOR="nvim"
+export VISUAL="nvim"
