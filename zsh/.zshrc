@@ -15,6 +15,10 @@ export ZSH="$HOME/.oh-my-zsh"
 # -------------------------
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
+# Startup speedups
+DISABLE_AUTO_UPDATE=true     # skip OMZ's git update check on startup
+ZSH_DISABLE_COMPFIX=true     # skip the slow per-startup compinit security audit
+
 # Load Powerlevel10k instant prompt (recommended by P10k)
 # Speeds up shell loading
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -32,9 +36,18 @@ plugins=(
 )
 
 source $ZSH/oh-my-zsh.sh
+# Lazy-load nvm — only initialize when node/npm/nvm/npx is first used.
+# Saves ~850ms on every shell startup (nvm_auto runs on each launch otherwise).
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"       # Loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+_load_nvm() {
+  unset -f nvm node npm npx
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+}
+nvm()  { _load_nvm; nvm "$@"; }
+node() { _load_nvm; node "$@"; }
+npm()  { _load_nvm; npm "$@"; }
+npx()  { _load_nvm; npx "$@"; }
 
 # -------------------------
 # FZF Init (if installed)
@@ -65,3 +78,15 @@ else
   [[ -r ~/.p10k.zsh ]] && source ~/.p10k.zsh
 fi
 
+export PATH=$PATH:/usr/local/go/bin
+
+# bun completions
+[ -s "/home/shlok/.bun/_bun" ] && source "/home/shlok/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# opencode
+export PATH=/home/shlok/.opencode/bin:$PATH
+export PATH="$PATH:$HOME/.dual-graph"
